@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+            width: 100%;
+        }
+        #message-container {
+            word-wrap: break-word !important;
+            white-space: pre-wrap !important;
+            overflow: hidden;
+        }
+        #message-container img {
+            vertical-align: text-top;
+        }
+        .message-sent,
+        .message-received,
+        .message-info {
+            font-weight: normal;
+            border-left: 3px solid #2A2C30;
+            margin-top: 3px;
+        }
+        .message-sent {
+
+        }
+        .message-received {
+
+        }
+        .message-info {
+            border-color: #DAC673;
+        }
+        .message-subject,
+        .message-content {
+            line-height: 1.428571429;
+        }
+        .message-subject {
+
+        }
+        .message-content {
+            line-height: 1.428571429;
+            padding: 5px;
+        }
+
+        .message-icon,
+        .message-time,
+        .message-from {
+            display: inline-block;
+            background-color: #494E58;
+            padding: 2px 5px;
+            border-left: 1px solid transparent;
+        }
+        .message-icon {
+        }
+        .message-from {
+            border-top-right-radius: 5px;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message-info .message-time {
+            border-top-right-radius: 5px;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message-sent .message-content,
+        .message-sent .message-subject {
+            color: #878F9A;
+        }
+        .message-received .message-time,
+        .message-info .message-time {
+            color: #78889C;
+        }
+        .message-received .message-content {
+            color: #D2DEF0;
+        }
+        .message-received .message-from,
+        .message-received .message-icon {
+            color: #91DD64;
+        }
+        .message-info .message-content,
+        .message-info .message-icon {
+            color: #DAC673;
+        }
+
+        .message-icon {
+            min-width: 20px;
+            text-align: center;
+            font-family: FontAwesome;
+        }
+        .message-icon img {
+            width: 16px;
+            height: 16px;
+        }
+        .message-from {
+
+        }
+        .usertext {
+            font-weight: normal;
+        }
+        .alert {
+            font-weight: bold;
+        }
+        .trackbar {
+            height: 1px;
+            background-color: #000;
+        }
+        .nicklink {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        a, a:link, a:visited, a:hover {
+            text-decoration: none;
+            color: #9CD4FF !important;
+        }
+        a:visited {
+            color: #4080FF !important;
+        }
+        a:hover {
+            color: #FFFFFF !important;
+        }
+    </style>
+    <link href="animate.css" rel="stylesheet">
+</head>
+<body>
+    <div id="message-container"></div>
+    <script type="text/javascript">
+        (function() {
+            var chat = window[chatServer.jsNamespace()],
+                cssBody = chat.util.findStyleSheet(document.styleSheets[0], 'body').style,
+                applyPsiSettings,
+                shared,
+                theme;
+
+            applyPsiSettings = function() {
+                chat.util.updateObject(cssBody, eval("["+shared.session.getFont()+"][0]"));
+            };
+
+            shared = shared = chat.adapter.initSession();
+            theme = {
+                chatElement: document.getElementById('message-container'),
+                dateFormat: 'hh:mm:ss',
+                templates: {
+                    spooledMessage:
+                        '<div class="message-info">' +
+                            '<div class="message-subject">' +
+                                '<span class="message-icon">%icon%</span>' +
+                                '<span class="message-time">%time%</span>' +
+                            '</div>' +
+                            '<div class="message-content">%message%</div>' +
+                        '</div>',
+                    sys:
+                        '<div class="message-info">' +
+                            '<div class="message-subject">' +
+                                '<span class="message-icon">%icon%</span>' +
+                            '</div>' +
+                            '<div class="message-content">%message%</div>' +
+                        '</div>',
+                    sysMessage:
+                        '<div class="message-info">' +
+                            '<div class="message-subject">' +
+                                '<span class="message-icon">%icon%</span>' +
+                                '<span class="message-time">%time%</span>' +
+                            '</div>' +
+                            '<div class="message-content">%message%</div>' +
+                        '</div>',
+                    sysMessageUT:
+                        '<div class="message-info">' +
+                            '<div class="message-subject">' +
+                                '<span class="message-icon">%icon%</span>' +
+                                '<span class="message-time">%time%</span>' +
+                            '</div>' +
+                            '<div class="message-content">%message%: <span class="message-usertext">%usertext%</span></div>' +
+                        '</div>',
+                    lastMsgDate:
+                        '<div class="message-info">' +
+                            '<div class="message-subject">' +
+                                '<span class="message-icon">%icon%</span>' +
+                                '<span class="message-time">%time%</span>' +
+                            '</div>' +
+                        '</div>',
+                    trackbar: '<hr class="trackbar" />'
+                },
+                proxy: function() {
+                    if (shared.cdata.type == "settings") {
+                        applyPsiSettings();
+                        return false;
+                    } else if (shared.cdata.type == "receipt") {
+                        var img = document.getElementById("receipt"+shared.cdata.id);
+                        if (img) {
+                            var sizeUri = messageIconsSize?"?w="+messageIconsSize+"&h="+messageIconsSize:"";
+                            img.src = (shared.cdata.encrypted?"icon:psi/notification_chat_delivery_ok_pgp":"icon:psi/notification_chat_delivery_ok")+sizeUri;
+                        }
+                    }
+                    if (shared.cdata.mtype == "message") {
+                        var template = shared.cdata.emote && shared.templates.messageNC || (shared.cdata.spooled && shared.templates.message || null);
+                        if (template) {
+                            shared.appendHtml(template.toString(), shared.cdata.local ? true : null);
+                            return false;
+                        }
+                    }
+                },
+                varHandlers : {
+                    alertedemote : function() {
+                        return shared.cdata.emote && shared.cdata.alert?" class='alert'":"";
+                    },
+                    sender : function() {
+                        var nick = chat.util.escapeHtml(shared.cdata.sender);
+                        nick = shared.cdata.mtype == "message" && shared.isMuc?
+                                '<a href="addnick://psi/'+encodeURIComponent(shared.cdata.sender)+
+                                        '" class="nicklink">'+nick+'</a>' : nick;
+                        return shared.cdata.emote?"*"+nick:nick;
+                    },
+                    alertedmessage : function() {
+                        return shared.cdata.alert?"<span class='alert'>"+
+                                shared.cdata.message+"</span>":shared.cdata.message;
+                    },
+                    sentrec : function() {return shared.cdata.spooled?"infmsg":
+                            (shared.cdata.local?"sent":"received");},
+                    nickcolor : function() {
+                        return shared.session.mucNickColor(shared.cdata.sender, shared.cdata.local);
+                    },
+                    icon : function() {
+                        var icon = '';
+                        switch (shared.cdata.mtype) {
+                            case 'message':
+                                if(shared.cdata.local && shared.cdata.awaitingReceipt) {
+                                    // sent
+                                    icon = '&#xf137;';
+                                }
+                                else {
+                                    // received
+                                    icon = '&#xf138;';
+                                }
+
+                                if(shared.cdata.encrypted) {
+                                    icon += ' &#xf023;'
+                                }
+                                break;
+                            case 'system':
+                            case 'subject':
+                            case 'status':
+                                icon = '&#xf017;';
+                                break;
+                            case 'urls':
+                                icon = '&#xf08e;';
+                                break;
+                            case 'lastDate':
+                                icon = '&#xf017;';
+                                break;
+                        }
+
+                        return icon;
+                    }
+                }
+            };
+
+            if(shared.isMuc) {
+                theme.templates.message = "<div class='msg'>%icon%<span style='color:%nickcolor%'>[%time%] %sender%</span> %message%</div>";
+                theme.templates.messageNC = "<div style='color:%nickcolor%'%alertedemote%>%icon%[%time%] %sender% %message%</div>";
+                theme.templates.receivedMessage = "<div class='msg'>%icon%<span style='color:%nickcolor%'>[%time%] %sender%</span> %alertedmessage%</div>";
+                theme.templates.subject = "<div class='message-info'>%icon%[%time%] %message%<div class='usertext'><b>%usertext%</b></div></div>";
+            }
+            else {
+                theme.templates.message =
+                        '<div class="message-%sentrec% animated fadeInRight">' +
+                            '<div class="message-subject">' +
+                                '<span class="message-icon">%icon%</span>' +
+                                '<span class="message-time">%time%</span>' +
+                                '<span class="message-from">%sender%</span>' +
+                            '</div>' +
+                            '<div class="message-content">%message%</div>' +
+                        '</div>';
+                theme.templates.messageNC = theme.templates.message;
+                theme.templates.receivedMessage = null;
+                theme.templates.subject =
+                        '<div class="message-info">' +
+                            '<div class="message-subject">' +
+                                '<span class="message-icon">%icon%</span>' +
+                                '<span class="message-time">%time%</span>' +
+                            '</div>' +
+                            '<div class="message-content">%usertext%</div>' +
+                        '</div>';
+            }
+
+            try {
+                shared.initTheme(theme);
+                applyPsiSettings();
+                shared.session.signalInited();
+            }
+            catch(e) {
+                document.getElementById('message-container').innerHTML = 'Failed to initialize theme: '+e;
+            }
+
+        })();
+    </script>
+</body>
+</html>
